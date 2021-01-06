@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class TodoStatus extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'slug'
+    ];
 }
