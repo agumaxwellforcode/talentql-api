@@ -16,6 +16,6 @@ use Illuminate\Support\Facades\Route;
 
 
 //Todo routes
-Route::middleware(['prefix' => 'v1'], function () {
-    Route::resource('todos', 'App\Http\Controllers\TodoController', ['except' => ['create', 'edit']]);
-});
+// Route::middleware(['prefix' => 'v1'], function () {
+Route::resource('todos', 'App\Http\Controllers\TodoController', ['except' => ['create', 'edit']]);
+// });

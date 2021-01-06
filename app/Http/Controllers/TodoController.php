@@ -18,7 +18,6 @@ class TodoController extends Controller
     {
         $todos = Todo::all();
         if (!$todos) {
-
             return response()->json([
                 'code' => '200',
                 'action' => 'fetch',
@@ -87,6 +86,9 @@ class TodoController extends Controller
                 'action' => 'create',
                 'status' => 'success',
                 'message' => "Todo created successfully",
+                'data' => [
+                    'todo' => $request->toArray(),
+                ]
             ], 201);
     }
 
