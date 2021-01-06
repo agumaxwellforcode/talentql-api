@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Todo;
+use App\Models\TodoStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
@@ -16,8 +17,15 @@ class TodoController extends Controller
      */
     public function index()
     {
+        // Retrieve all todos
+
         $todos = Todo::all();
-        if (!$todos) {
+
+        // check if todos is empty to tailor the response
+
+        if ($todos->isEmpty()) {
+            // todo is empty
+
             return response()->json([
                 'code' => '200',
                 'action' => 'fetch',
@@ -28,6 +36,8 @@ class TodoController extends Controller
                 ]
             ], 200);
         } else {
+            // todo is not empty
+
             return response()->json([
                 'code' => '200',
                 'action' => 'fetch',
@@ -48,7 +58,10 @@ class TodoController extends Controller
      */
     public function store(Request $request)
     {
-        // array check
+        // Create a new todo (Record)
+
+        // Validate input from client
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|min:1',
             'body' => 'required|string|min:1',
@@ -56,6 +69,8 @@ class TodoController extends Controller
             'start' => 'required|date_format:d/m/Y',
             'end' => 'required|date_format:d/m/Y'
         ]);
+
+        // Handle Validation errors
 
         if ($validator->fails()) {
             return response()->json([
@@ -68,36 +83,66 @@ class TodoController extends Controller
                 ]
             ], 400);
         } else {
-            $create_todo = Todo::create([
-                'title' => $request->title,
-                'body' => $request->body,
-                'status' => $request->status,
-                'start' => $request->start,
-                'end' => $request->end,
-            ]);
+            // Validation passed, proceed
 
-            if (!$create_todo)
-                return response()->json([
-                    'code' => '500',
-                    'action' => 'create',
-                    'status' => 'error',
-                    'message' => 'Problem adding Todo'
-                ], 500);
-            else
-                return response()->json([
-                    'code' => '201',
-                    'action' => 'create',
-                    'status' => 'success',
-                    'message' => "Todo created successfully",
-                    'data' => [
-                        'todo' => $request->toArray(),
-                    ]
-                ], 201);
+            // Fetch all predefined Todo status, This is to make sure a client dosent pass random todo status
+
+            $todostatus_array = TodoStatus::all();
+
+            // Compare the supplied ststus to predefined all status
+
+            foreach ($todostatus_array as $todostatus) {
+                if ($request->status == $todostatus->slug) {
+
+                    /* There's a match
+
+                     Create the todo */
+                    $create_todo = Todo::create([
+                        'title' => $request->title,
+                        'body' => $request->body,
+                        'status' => $request->status,
+                        'start' => $request->start,
+                        'end' => $request->end,
+                    ]);
+
+                    // Catch and return error response if there's a problem in creating the todo
+                    if (!$create_todo)
+                        return response()->json([
+                            'code' => '500',
+                            'action' => 'create',
+                            'status' => 'error',
+                            'message' => 'Problem adding Todo'
+                        ], 500);
+                    else
+
+                        // Todo was created successfully
+                        return response()->json([
+                            'code' => '201',
+                            'action' => 'create',
+                            'status' => 'success',
+                            'message' => "Todo created successfully",
+                            'data' => [
+                                'todo' => $request->toArray(),
+                            ]
+                        ], 201);
+                } else {
+
+                    // there's no match: invalid status supplied
+                    return response()->json([
+                        'code' => '400',
+                        'action' => 'create',
+                        'status' => 'error',
+                        'message' => 'Invalid todo status supplied',
+                        'issue' => $request->status
+
+                    ], 400);
+                }
+            }
         }
     }
 
     /**
-     * Display the specified todos.
+     * Display the specified todo.
      *
      * @param  \App\Models\Todo  $todo
      * @return \Illuminate\Http\Response
@@ -132,6 +177,9 @@ class TodoController extends Controller
      */
     public function update(Request $request, Todo $todo)
     {
+        // Update a todo (Record)
+
+        // Validate input from client
         $validator = Validator::make($request->all(), [
             'title' => 'string|min:1',
             'body' => 'string|min:1',
@@ -140,6 +188,7 @@ class TodoController extends Controller
             'end' => 'date_format:d/m/Y'
         ]);
 
+        // Handle Validation errors
         if ($validator->fails()) {
             return response()->json([
                 'code' => '400',
@@ -152,33 +201,65 @@ class TodoController extends Controller
             ], 400);
         } else
 
-        if (!$todo->exists) {
-            return response()->json([
-                'code' => '400',
-                'action' => 'edit',
-                'status' => 'error',
-                'message' => 'todo not found'
-            ], 400);
-        } else
-            $updated = $todo->fill($request->all())->save();
+            // Validation passed, proceed
 
-        if ($updated)
-            return response()->json([
-                'code' => '200',
-                'action' => 'edit',
-                'status' => 'success',
-                'message' => "todo updated successfully",
-                'data' => [
-                    'todo' => $todo->toArray(),
-                ]
-            ], 200);
-        else
-            return response()->json([
-                'code' => '500',
-                'action' => 'edit',
-                'status' => 'error',
-                'message' => 'There was a problem updating the todo'
-            ], 500);
+            // Fetch all predefined Todo status, This is to make sure a client dosent pass random todo status
+            if (!$todo->exists) {
+                return response()->json([
+                    'code' => '400',
+                    'action' => 'edit',
+                    'status' => 'error',
+                    'message' => 'todo not found'
+                ], 400);
+            } else
+
+                // fetch all predefined status
+                $todostatus_array = TodoStatus::all();
+
+        // Compare the supplied ststus to predefined all status
+        foreach ($todostatus_array as $todostatus) {
+            if ($request->status == $todostatus->slug) {
+
+                /* There's a match
+
+                Update the todo */
+                $updated = $todo->fill($request->all())->save();
+
+                // Catch and return error response if there's a problem in creating the todo
+
+                // Update successfull
+                if ($updated)
+                    return response()->json([
+                        'code' => '200',
+                        'action' => 'edit',
+                        'status' => 'success',
+                        'message' => "todo updated successfully",
+                        'data' => [
+                            'todo' => $todo->toArray(),
+                        ]
+                    ], 200);
+                else
+
+                    //Update Error
+                    return response()->json([
+                        'code' => '500',
+                        'action' => 'edit',
+                        'status' => 'error',
+                        'message' => 'There was a problem updating the todo'
+                    ], 500);
+            } else {
+
+                // there's no match: invalid status supplied
+                return response()->json([
+                    'code' => '400',
+                    'action' => 'edit',
+                    'status' => 'error',
+                    'message' => 'Invalid todo status supplied',
+                    'issue' => $request->status
+
+                ], 400);
+            }
+        }
     }
 
     /**
@@ -189,7 +270,10 @@ class TodoController extends Controller
      */
     public function destroy(Todo $todo)
     {
+        // check if the specified todo exists
         if (!$todo->exists) {
+
+            // it dosen't exist
             return response()->json([
                 'code' => '400',
                 'action' => 'remove',
@@ -198,6 +282,9 @@ class TodoController extends Controller
             ], 400);
         }
 
+        // it exists
+
+        //Delete and check if it was succeded or failed
         if ($todo->delete())
             return response()->json([
                 'code' => '200',
