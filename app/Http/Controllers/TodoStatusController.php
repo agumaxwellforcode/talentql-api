@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Todo;
+use App\Models\TodoStatus;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
-class TodoController extends Controller
+class TodoStatusController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -42,10 +41,10 @@ class TodoController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Todo  $todo
+     * @param  \App\Models\TodoStatus  $todoStatus
      * @return \Illuminate\Http\Response
      */
-    public function show(Todo $todo)
+    public function show(TodoStatus $todoStatus)
     {
         //
     }
@@ -53,10 +52,10 @@ class TodoController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Todo  $todo
+     * @param  \App\Models\TodoStatus  $todoStatus
      * @return \Illuminate\Http\Response
      */
-    public function edit(Todo $todo)
+    public function edit(TodoStatus $todoStatus)
     {
         //
     }
@@ -65,21 +64,21 @@ class TodoController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Todo  $todo
+     * @param  \App\Models\TodoStatus  $todoStatus
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Todo $todo)
+    public function update(Request $request, TodoStatus $todoStatus)
     {
         //
     }
 
     /**
-     * Remove the specified Todo from storage.
+     * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Todo  $todo
+     * @param  \App\Models\TodoStatus  $todoStatus
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Todo $todo)
+    public function destroy(TodoStatus $todoStatus)
     {
         //
     }
