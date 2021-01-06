@@ -49,47 +49,51 @@ class TodoController extends Controller
     public function store(Request $request)
     {
         // array check
-        $validator = Validator::make(
-            ['data' => $request],
-            ['title' => 'string|min:1'],
-            ['body' => 'string|min:1'],
-            ['status' => 'string|min:1'],
-            ['start' => 'required|date_format:d/m/Y'],
-            ['due' => 'required|date_format:d/m/Y']
-        );
-
-        if ($validator->fails()) {
-            $response['message'] = $validator->errors();
-            $response['action'] = 'create';
-            $response['status'] = 'error';
-            return response()->json($response, Response::HTTP_BAD_REQUEST);
-        }
-
-        $create_todo = Todo::create([
-            'title' => $request->title,
-            'body' => $request->body,
-            'status' => $request->status,
-            'start' => $request->start,
-            'due' => $request->due,
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|min:1',
+            'body' => 'required|string|min:1',
+            'status' => 'required|string|min:1',
+            'start' => 'required|date_format:d/m/Y',
+            'end' => 'required|date_format:d/m/Y'
         ]);
 
-        if (!$create_todo)
+        if ($validator->fails()) {
             return response()->json([
-                'code' => '500',
+                'code' => '400',
                 'action' => 'create',
                 'status' => 'error',
-                'message' => 'Problem adding Todo'
-            ], 500);
-        else
-            return response()->json([
-                'code' => '201',
-                'action' => 'create',
-                'status' => 'success',
-                'message' => "Todo created successfully",
-                'data' => [
-                    'todo' => $request->toArray(),
+                'message' => [
+                    'Invalid or empty input parameters see affected field(s) below',
+                    $validator->errors()
                 ]
-            ], 201);
+            ], 400);
+        } else {
+            $create_todo = Todo::create([
+                'title' => $request->title,
+                'body' => $request->body,
+                'status' => $request->status,
+                'start' => $request->start,
+                'end' => $request->end,
+            ]);
+
+            if (!$create_todo)
+                return response()->json([
+                    'code' => '500',
+                    'action' => 'create',
+                    'status' => 'error',
+                    'message' => 'Problem adding Todo'
+                ], 500);
+            else
+                return response()->json([
+                    'code' => '201',
+                    'action' => 'create',
+                    'status' => 'success',
+                    'message' => "Todo created successfully",
+                    'data' => [
+                        'todo' => $request->toArray(),
+                    ]
+                ], 201);
+        }
     }
 
     /**
@@ -114,7 +118,7 @@ class TodoController extends Controller
                 'status' => 'success',
                 'message' => "Todo fetched successfully",
                 'data' => [
-                    'todos' => $todo->toArray(),
+                    'todo' => $todo->toArray(),
                 ]
             ], 200);
     }
@@ -128,15 +132,35 @@ class TodoController extends Controller
      */
     public function update(Request $request, Todo $todo)
     {
-        if (!$todo) {
+        $validator = Validator::make($request->all(), [
+            'title' => 'string|min:1',
+            'body' => 'string|min:1',
+            'status' => 'string|min:1',
+            'start' => 'date_format:d/m/Y',
+            'end' => 'date_format:d/m/Y'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => '400',
+                'action' => 'edit',
+                'status' => 'error',
+                'message' => [
+                    'Invalid input parameters affected field(s) below',
+                    $validator->errors()
+                ]
+            ], 400);
+        } else
+
+        if (!$todo->exists) {
             return response()->json([
                 'code' => '400',
                 'action' => 'edit',
                 'status' => 'error',
                 'message' => 'todo not found'
             ], 400);
-        }
-        $updated = $todo->fill($request->all())->save();
+        } else
+            $updated = $todo->fill($request->all())->save();
 
         if ($updated)
             return response()->json([
@@ -144,6 +168,9 @@ class TodoController extends Controller
                 'action' => 'edit',
                 'status' => 'success',
                 'message' => "todo updated successfully",
+                'data' => [
+                    'todo' => $todo->toArray(),
+                ]
             ], 200);
         else
             return response()->json([
@@ -162,7 +189,7 @@ class TodoController extends Controller
      */
     public function destroy(Todo $todo)
     {
-        if (!$todo) {
+        if (!$todo->exists) {
             return response()->json([
                 'code' => '400',
                 'action' => 'remove',
@@ -177,7 +204,7 @@ class TodoController extends Controller
                 'action' => 'remove',
                 'status' => 'success',
                 'message' => 'Todo deleted successfully'
-            ], 204);
+            ], 200);
         else
             return response()->json([
                 'code' => '500',

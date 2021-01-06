@@ -18,7 +18,7 @@ class CreateTodosTable extends Migration
             $table->string('title');
             $table->string('body');
             $table->date('start');
-            $table->date('due');
+            $table->date('end');
             $table->string('status');
             $table->timestamps();
         });
